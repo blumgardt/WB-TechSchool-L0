@@ -10,10 +10,14 @@ import (
 
 	"WB-TechSchool-L0/internal/domain"
 	"WB-TechSchool-L0/internal/repo"
+	"WB-TechSchool-L0/internal/service"
+	"WB-TechSchool-L0/internal/service/redis"
 	"WB-TechSchool-L0/pkg/db"
 )
 
 func main() {
+	ctx := context.Background()
+
 	// --- подключение к БД ---
 	pgDb, err := db.ConnectToDb()
 	if err != nil {
@@ -24,7 +28,16 @@ func main() {
 	// --- инициализация repo ---
 	orderRepo := repo.NewPgOrderRepo(pgDb)
 
-	// --- чтение тестового заказа из файла model.json ---
+	// --- инициализация Redis ---
+	redisClient := redis.NewRedisClient("localhost:6379", 5*time.Minute, orderRepo)
+	if err := redisClient.RestoreCache(ctx); err != nil {
+		log.Fatal("Ошибка восстановления кэша:", err)
+	}
+
+	// --- инициализация сервиса ---
+	orderService := service.NewOrderService(orderRepo, redisClient)
+
+	// --- читаем тестовый заказ из файла model.json ---
 	data, err := os.ReadFile("model.json")
 	if err != nil {
 		log.Fatal("Ошибка чтения model.json:", err)
@@ -35,24 +48,27 @@ func main() {
 		log.Fatal("Ошибка парсинга JSON:", err)
 	}
 
-	// вставка даты, если её нет
 	if order.DateCreated.IsZero() {
 		order.DateCreated = time.Now()
 	}
 
-	// --- сохранение заказа ---
-	ctx := context.Background()
+	// --- сохраняем заказ в БД ---
 	if err := orderRepo.Save(ctx, &order); err != nil {
 		log.Fatal("Ошибка сохранения заказа:", err)
 	}
-	fmt.Println("✅ Заказ сохранён:", order.OrderUid)
+	fmt.Println("✅ Заказ сохранён в БД:", order.OrderUid)
 
-	// --- достаём обратно ---
-	got, err := orderRepo.GetById(ctx, order.OrderUid)
+	// --- получаем заказ через сервис (Redis + Repo) ---
+	got, err := orderService.GetOrderById(order.OrderUid, ctx)
 	if err != nil {
 		log.Fatal("Ошибка получения заказа:", err)
 	}
+	fmt.Println("✅ Первый запрос (из БД, закэширован):", got.OrderUid)
 
-	fmt.Println("✅ Заказ получен из БД:")
-	fmt.Printf("%+v\n", got)
+	// --- второй запрос (должен вытащить уже из Redis) ---
+	gotCached, err := orderService.GetOrderById(order.OrderUid, ctx)
+	if err != nil {
+		log.Fatal("Ошибка получения заказа:", err)
+	}
+	fmt.Println("✅ Второй запрос (из Redis):", gotCached.OrderUid)
 }
