@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Order Lookup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f4f8;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.12), 0 1.5px 6px rgba(0,0,0,0.06);
+            padding: 2.5rem 2rem 2rem 2rem;
+            max-width: 400px;
+            width: 90vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            margin-top: 0;
+            margin-bottom: 0.6em;
+            font-size: 2rem;
+        }
+        p {
+            margin-top: 0;
+            margin-bottom: 1.2em;
+            color: #444;
+            text-align: center;
+        }
+        input {
+            padding: 0.6rem;
+            font-size: 1rem;
+            width: 100%;
+            max-width: 300px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            margin-bottom: 1em;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            border-color: #4f8cff;
+            outline: none;
+        }
+        .button-row {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 1.5em;
+        }
+        button {
+            padding: 0.6rem 1.4rem;
+            font-size: 1rem;
+            margin-left: 0;
+            border: none;
+            border-radius: 6px;
+            background: #4f8cff;
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(79,140,255,0.06);
+            transition: background 0.18s, transform 0.12s;
+        }
+        button:hover, button:focus {
+            background: #2667d1;
+            transform: translateY(-2px) scale(1.03);
+        }
+        h2 {
+            margin-bottom: 0.5em;
+            margin-top: 0.5em;
+            font-size: 1.15rem;
+            color: #4f8cff;
+            align-self: flex-start;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 1rem;
+            border-radius: 7px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 0.5em;
+            width: 100%;
+            font-size: 0.98rem;
+            color: #232323;
+            box-sizing: border-box;
+            min-height: 3em;
+        }
+        @media (max-width: 500px) {
+            .container {
+                padding: 1.2rem 0.5rem 1rem 0.5rem;
+                max-width: 98vw;
+            }
+            input {
+                font-size: 0.98rem;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Order Lookup</h1>
+    <p>Введите <code>order_id</code> и нажмите кнопку:</p>
+    <input type="text" id="orderIdInput" placeholder="например: b563feb7b2b84b6test" />
+    <div class="button-row">
+        <button onclick="fetchOrder()">Найти заказ</button>
+    </div>
+    <h2>Результат:</h2>
+    <pre id="result">Здесь появится JSON заказа...</pre>
+</div>
+
+<script>
+    async function fetchOrder() {
+        const orderId = document.getElementById('orderIdInput').value.trim();
+        if (!orderId) {
+            alert("Введите order_id");
+            return;
+        }
+
+        try {
+            const response = await fetch(`/order?id=${orderId}`);
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.status}`);
+            }
+            const data = await response.json();
+            document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+        } catch (err) {
+            document.getElementById('result').textContent = "Ошибка: " + err.message;
+        }
+    }
+</script>
+</body>
+</html>
