@@ -9,7 +9,7 @@ func NewRouter(handler *OrderHandler) http.Handler {
 
 	mux.HandleFunc("/order", handler.GetOrder)
 	mux.HandleFunc("/ping/", handler.Ping)
-	mux.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("/usr/local/share/static"))))
+	mux.Handle("/", http.FileServer(http.Dir("./web/static")))
 
 	return mux
 }
