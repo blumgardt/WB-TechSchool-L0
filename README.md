@@ -6,11 +6,12 @@
 ---
 
 ## 📂 Структура проекта
+```plaintext
 WB-TechSchool-L0/
-├── cmd/                # Точка входа (main.go)
+├── cmd/                
 ├── internal/
 │   ├── domain/         # Бизнес-модели (Order, Delivery, Payment, Item)
-│   ├── repo/           # Репозиторий (Postgres реализация)
+│   ├── repo/           # Репозиторий (Postgres)
 │   ├── service/
 │   │   ├── redis/      # Работа с Redis
 │   │   └── kafka/      # Kafka consumer
@@ -22,6 +23,7 @@ WB-TechSchool-L0/
 ├── go.sum
 ├── README.md
 └── .env.example
+```
 
 ---
 
